@@ -6,14 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -207,57 +199,88 @@ export default function PositionsDashboard() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Positions ({filteredAndSortedPositions.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Position ID</TableHead>
-                <TableHead>Currency</TableHead>
-                <TableHead>Liquidity Provider</TableHead>
-                <TableHead className="cursor-pointer" onClick={() => handleSort('netPosition')}>
-                  Net Position {sortField === 'netPosition' && (sortDirection === 'asc' ? '↑' : '↓')}
-                </TableHead>
-                <TableHead>Current Rate (Reuters)</TableHead>
-                <TableHead className="cursor-pointer" onClick={() => handleSort('mtmValue')}>
-                  MTM Value (USD) {sortField === 'mtmValue' && (sortDirection === 'asc' ? '↑' : '↓')}
-                </TableHead>
-                <TableHead className="cursor-pointer" onClick={() => handleSort('unrealizedPnL')}>
-                  Unrealized P&L {sortField === 'unrealizedPnL' && (sortDirection === 'asc' ? '↑' : '↓')}
-                </TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredAndSortedPositions.map((position) => (
-                <TableRow 
-                  key={position.id}
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => navigate(`/positions/${position.currency}`)}
-                >
-                  <TableCell className="font-medium">{position.id}</TableCell>
-                  <TableCell className="font-semibold">{position.currency}</TableCell>
-                  <TableCell>{position.liquidityProvider}</TableCell>
-                  <TableCell>{position.netPosition.toLocaleString()}</TableCell>
-                  <TableCell>{position.currentRate.toFixed(4)}</TableCell>
-                  <TableCell>{formatCurrency(position.mtmValue)}</TableCell>
-                  <TableCell className={position.unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'}>
-                    {formatPnL(position.unrealizedPnL)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={position.status === 'Open' ? 'default' : 'secondary'}>
-                      {position.status}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-semibold">Positions ({filteredAndSortedPositions.length})</h3>
+          <div className="flex gap-2 text-sm text-muted-foreground">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => handleSort('netPosition')}
+            >
+              Sort by Position {sortField === 'netPosition' && (sortDirection === 'asc' ? '↑' : '↓')}
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => handleSort('mtmValue')}
+            >
+              Sort by MTM {sortField === 'mtmValue' && (sortDirection === 'asc' ? '↑' : '↓')}
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => handleSort('unrealizedPnL')}
+            >
+              Sort by P&L {sortField === 'unrealizedPnL' && (sortDirection === 'asc' ? '↑' : '↓')}
+            </Button>
+          </div>
+        </div>
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredAndSortedPositions.map((position) => (
+            <Card 
+              key={position.id}
+              className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] border-2"
+              onClick={() => navigate(`/positions/${position.currency}`)}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-xl font-bold text-primary">{position.currency}</span>
+                    </div>
+                    <div>
+                      <CardTitle className="text-2xl">{position.currency}</CardTitle>
+                      <p className="text-xs text-muted-foreground">Click for details</p>
+                    </div>
+                  </div>
+                  <Badge variant={position.status === 'Open' ? 'default' : 'secondary'}>
+                    {position.status}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Net Position</p>
+                    <p className="text-lg font-bold font-mono">
+                      {position.netPosition >= 0 ? '+' : ''}{position.netPosition.toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Reuters Rate</p>
+                    <p className="text-lg font-bold font-mono">{position.currentRate.toFixed(4)}</p>
+                  </div>
+                </div>
+                
+                <div className="pt-2 border-t space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">MTM Value</span>
+                    <span className="font-semibold font-mono">{formatCurrency(position.mtmValue)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Unrealized P&L</span>
+                    <span className={`font-bold font-mono ${position.unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {formatPnL(position.unrealizedPnL)}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

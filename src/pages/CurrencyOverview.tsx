@@ -221,7 +221,8 @@ export default function CurrencyOverview() {
                 <TableHead>Timestamp</TableHead>
                 <TableHead>Account</TableHead>
                 <TableHead>Pair</TableHead>
-                <TableHead>Amount</TableHead>
+                <TableHead>Sell Amount</TableHead>
+                <TableHead>Buy Amount</TableHead>
                 <TableHead>Rate</TableHead>
                 <TableHead>LP</TableHead>
               </TableRow>
@@ -229,6 +230,14 @@ export default function CurrencyOverview() {
             <TableBody>
               {paginatedTrades.map((trade) => {
                 const isExpanded = expandedTrades.has(trade.id);
+                const [baseCcy, quoteCcy] = trade.originalPair.split('/');
+                const sellAmount = trade.originalAmount < 0 
+                  ? `${Math.abs(trade.originalAmount).toLocaleString()} ${baseCcy}`
+                  : '-';
+                const buyAmount = trade.originalAmount > 0
+                  ? `${trade.originalAmount.toLocaleString()} ${baseCcy}`
+                  : '-';
+                
                 return (
                   <>
                     <TableRow 
@@ -249,9 +258,8 @@ export default function CurrencyOverview() {
                       </TableCell>
                       <TableCell>{trade.customerOrder}</TableCell>
                       <TableCell className="font-semibold">{trade.originalPair}</TableCell>
-                      <TableCell className="font-mono">
-                        {trade.originalAmount >= 0 ? '+' : ''}{trade.originalAmount.toLocaleString()}
-                      </TableCell>
+                      <TableCell className="font-mono text-red-600">{sellAmount}</TableCell>
+                      <TableCell className="font-mono text-green-600">{buyAmount}</TableCell>
                       <TableCell className="font-mono">{trade.usdLegs[0]?.rate.toFixed(4) || 'N/A'}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-xs">{trade.lpName}</Badge>

@@ -2,16 +2,8 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { mockPositions } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { TrendingUp, TrendingDown, DollarSign, Activity } from "lucide-react";
 
 type CurrencyDisplay = 'USD' | 'SGD';
@@ -19,9 +11,6 @@ type CurrencyDisplay = 'USD' | 'SGD';
 export default function PositionsDashboard() {
   const navigate = useNavigate();
   const [currency, setCurrency] = useState<CurrencyDisplay>('USD');
-  const [currencyFilter, setCurrencyFilter] = useState('');
-  const [lpFilter, setLpFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<keyof typeof mockPositions[0] | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
@@ -31,16 +20,11 @@ export default function PositionsDashboard() {
     return currency === 'SGD' ? usdAmount * SGD_RATE : usdAmount;
   };
 
-  const filteredAndSortedPositions = useMemo(() => {
-    let filtered = mockPositions.filter(pos => {
-      if (currencyFilter && !pos.currency.toLowerCase().includes(currencyFilter.toLowerCase())) return false;
-      if (lpFilter && !pos.liquidityProvider.toLowerCase().includes(lpFilter.toLowerCase())) return false;
-      if (statusFilter !== 'all' && pos.status !== statusFilter) return false;
-      return true;
-    });
+  const sortedPositions = useMemo(() => {
+    let sorted = [...mockPositions];
 
     if (sortField) {
-      filtered.sort((a, b) => {
+      sorted.sort((a, b) => {
         const aVal = a[sortField];
         const bVal = b[sortField];
         if (typeof aVal === 'number' && typeof bVal === 'number') {
@@ -50,8 +34,8 @@ export default function PositionsDashboard() {
       });
     }
 
-    return filtered;
-  }, [currencyFilter, lpFilter, statusFilter, sortField, sortDirection]);
+    return sorted;
+  }, [sortField, sortDirection]);
 
   const totals = useMemo(() => {
     const totalMTM = mockPositions.reduce((sum, pos) => sum + pos.mtmValue, 0);
@@ -161,47 +145,9 @@ export default function PositionsDashboard() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Filter Positions</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-4">
-            <Input
-              placeholder="Currency..."
-              value={currencyFilter}
-              onChange={(e) => setCurrencyFilter(e.target.value)}
-            />
-            <Input
-              placeholder="Liquidity Provider..."
-              value={lpFilter}
-              onChange={(e) => setLpFilter(e.target.value)}
-            />
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="Open">Open</SelectItem>
-                <SelectItem value="Closed">Closed</SelectItem>
-                <SelectItem value="Hedged">Hedged</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={() => {
-              setCurrencyFilter('');
-              setLpFilter('');
-              setStatusFilter('all');
-            }}>
-              Clear Filters
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold">Positions ({filteredAndSortedPositions.length})</h3>
+          <h3 className="text-xl font-semibold">Positions ({sortedPositions.length})</h3>
           <div className="flex gap-2 text-sm text-muted-foreground">
             <Button 
               variant="ghost" 
@@ -228,7 +174,7 @@ export default function PositionsDashboard() {
         </div>
         
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredAndSortedPositions.map((position) => (
+          {sortedPositions.map((position) => (
             <Card 
               key={position.id}
               className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] border-2"

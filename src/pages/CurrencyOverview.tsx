@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
 import { mockPositions } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,9 @@ import {
 export default function CurrencyOverview() {
   const { currency } = useParams<{ currency: string }>();
   const navigate = useNavigate();
+  const [expandedTrades, setExpandedTrades] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   const currencyPositions = useMemo(() => {
     return mockPositions.filter(pos => pos.currency === currency);
@@ -66,6 +69,26 @@ export default function CurrencyOverview() {
       pos.trades.map(trade => ({ ...trade, positionId: pos.id, lpName: pos.liquidityProvider }))
     );
   }, [currencyPositions]);
+
+  const paginatedTrades = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return allTrades.slice(startIndex, endIndex);
+  }, [allTrades, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(allTrades.length / itemsPerPage);
+
+  const toggleTradeDetails = (tradeId: string) => {
+    setExpandedTrades(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(tradeId)) {
+        newSet.delete(tradeId);
+      } else {
+        newSet.add(tradeId);
+      }
+      return newSet;
+    });
+  };
 
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -162,96 +185,127 @@ export default function CurrencyOverview() {
       {/* Underlying Transactions Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Underlying Transactions</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Underlying Transactions ({allTrades.length})</CardTitle>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+          </div>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {allTrades.map((trade) => (
-            <div key={trade.id} className="border rounded-lg overflow-hidden">
-              {/* Original Trade Record */}
-              <div className="bg-muted/30 p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold">Original Trade: {trade.id}</h4>
-                  <Badge variant="outline">{trade.lpName}</Badge>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground text-xs">Timestamp</p>
-                    <p className="font-medium">{new Date(trade.tradeDate).toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Account Name</p>
-                    <p className="font-medium">{trade.customerOrder}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Currency Pair</p>
-                    <p className="font-medium">{trade.originalPair}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Sell Amount</p>
-                    <p className="font-medium">
-                      {trade.originalAmount < 0 
-                        ? `${Math.abs(trade.originalAmount).toLocaleString()} ${trade.originalPair.split('/')[0]}`
-                        : '-'
-                      }
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Buy Amount</p>
-                    <p className="font-medium">
-                      {trade.originalAmount > 0
-                        ? `${trade.originalAmount.toLocaleString()} ${trade.originalPair.split('/')[0]}`
-                        : '-'
-                      }
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Rate</p>
-                    <p className="font-medium">{trade.usdLegs[0]?.rate.toFixed(4) || 'N/A'}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Split USD Leg Records */}
-              <div className="p-4">
-                <h5 className="text-sm font-semibold mb-3 text-muted-foreground">USD-Denominated Breakdown</h5>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Currency Pair</TableHead>
-                      <TableHead>Rate</TableHead>
-                      <TableHead>Base Currency Position</TableHead>
-                      <TableHead>Quote Currency Position</TableHead>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[40px]"></TableHead>
+                <TableHead>Trade ID</TableHead>
+                <TableHead>Timestamp</TableHead>
+                <TableHead>Account</TableHead>
+                <TableHead>Pair</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Rate</TableHead>
+                <TableHead>LP</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedTrades.map((trade) => {
+                const isExpanded = expandedTrades.has(trade.id);
+                return (
+                  <>
+                    <TableRow 
+                      key={trade.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => toggleTradeDetails(trade.id)}
+                    >
+                      <TableCell>
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium">{trade.id}</TableCell>
+                      <TableCell className="text-sm">
+                        {new Date(trade.tradeDate).toLocaleDateString()} {new Date(trade.tradeDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </TableCell>
+                      <TableCell>{trade.customerOrder}</TableCell>
+                      <TableCell className="font-semibold">{trade.originalPair}</TableCell>
+                      <TableCell className="font-mono">
+                        {trade.originalAmount >= 0 ? '+' : ''}{trade.originalAmount.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="font-mono">{trade.usdLegs[0]?.rate.toFixed(4) || 'N/A'}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs">{trade.lpName}</Badge>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {trade.usdLegs.map((leg, idx) => {
-                      const [base, quote] = leg.pair.replace('USD', 'USD/').includes('/') 
-                        ? leg.pair.split('/')
-                        : leg.pair.startsWith('USD')
-                        ? ['USD', leg.pair.substring(3)]
-                        : [leg.pair.substring(0, 3), 'USD'];
-                      
-                      const basePosition = leg.amount;
-                      const quotePosition = -leg.usdEquivalent;
+                    {isExpanded && (
+                      <TableRow key={`${trade.id}-details`}>
+                        <TableCell colSpan={8} className="bg-muted/30 p-0">
+                          <div className="p-4 space-y-3">
+                            <h5 className="text-sm font-semibold text-muted-foreground">USD-Denominated Breakdown</h5>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Currency Pair</TableHead>
+                                  <TableHead>Rate</TableHead>
+                                  <TableHead>Base Currency Position</TableHead>
+                                  <TableHead>Quote Currency Position</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {trade.usdLegs.map((leg, idx) => {
+                                  const [base, quote] = leg.pair.replace('USD', 'USD/').includes('/') 
+                                    ? leg.pair.split('/')
+                                    : leg.pair.startsWith('USD')
+                                    ? ['USD', leg.pair.substring(3)]
+                                    : [leg.pair.substring(0, 3), 'USD'];
+                                  
+                                  const basePosition = leg.amount;
+                                  const quotePosition = -leg.usdEquivalent;
 
-                      return (
-                        <TableRow key={idx}>
-                          <TableCell className="font-medium">{leg.pair}</TableCell>
-                          <TableCell className="font-mono">{leg.rate.toFixed(4)}</TableCell>
-                          <TableCell className={basePosition >= 0 ? 'text-green-600' : 'text-red-600'}>
-                            {base}: {basePosition >= 0 ? '+' : ''}{formatCurrency(basePosition)}
-                          </TableCell>
-                          <TableCell className={quotePosition >= 0 ? 'text-green-600' : 'text-red-600'}>
-                            {quote}: {quotePosition >= 0 ? '+' : ''}{formatCurrency(quotePosition)}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          ))}
+                                  return (
+                                    <TableRow key={idx}>
+                                      <TableCell className="font-medium">{leg.pair}</TableCell>
+                                      <TableCell className="font-mono">{leg.rate.toFixed(4)}</TableCell>
+                                      <TableCell className={basePosition >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                        {base}: {basePosition >= 0 ? '+' : ''}{formatCurrency(basePosition)}
+                                      </TableCell>
+                                      <TableCell className={quotePosition >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                        {quote}: {quotePosition >= 0 ? '+' : ''}{formatCurrency(quotePosition)}
+                                      </TableCell>
+                                    </TableRow>
+                                  );
+                                })}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
+                );
+              })}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

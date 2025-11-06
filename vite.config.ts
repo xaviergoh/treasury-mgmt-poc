@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: '/fx-treasury/', // Replace with your GitHub repo name
+  base: '/treasury-mgmt-poc/', // Replace with your GitHub repo name
   server: {
     host: "::",
     port: 8080,

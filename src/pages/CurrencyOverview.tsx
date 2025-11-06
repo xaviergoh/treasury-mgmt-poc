@@ -287,17 +287,30 @@ export default function CurrencyOverview() {
                                     : [leg.pair.substring(0, 3), 'USD'];
                                   
                                   const basePosition = leg.amount;
-                                  const quotePosition = -leg.usdEquivalent;
+                                  // Calculate actual quote currency position
+                                  const quotePosition = -(leg.amount * leg.rate);
+                                  
+                                  const baseLabel = basePosition > 0 
+                                    ? `Long ${formatCurrency(Math.abs(basePosition))}`
+                                    : basePosition < 0
+                                    ? `Short ${formatCurrency(Math.abs(basePosition))}`
+                                    : formatCurrency(0);
+                                    
+                                  const quoteLabel = quotePosition > 0
+                                    ? `Long ${formatCurrency(Math.abs(quotePosition))}`
+                                    : quotePosition < 0
+                                    ? `Short ${formatCurrency(Math.abs(quotePosition))}`
+                                    : formatCurrency(0);
 
                                   return (
                                     <TableRow key={idx}>
                                       <TableCell className="font-medium">{leg.pair}</TableCell>
                                       <TableCell className="font-mono">{leg.rate.toFixed(4)}</TableCell>
-                                      <TableCell className={basePosition >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                        {basePosition >= 0 ? '+' : ''}{formatCurrency(basePosition)}
+                                      <TableCell className={`font-semibold ${basePosition > 0 ? 'text-green-600' : basePosition < 0 ? 'text-red-600' : ''}`}>
+                                        {baseLabel}
                                       </TableCell>
-                                      <TableCell className={quotePosition >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                        {quotePosition >= 0 ? '+' : ''}{formatCurrency(quotePosition)}
+                                      <TableCell className={`font-semibold ${quotePosition > 0 ? 'text-green-600' : quotePosition < 0 ? 'text-red-600' : ''}`}>
+                                        {quoteLabel}
                                       </TableCell>
                                     </TableRow>
                                   );

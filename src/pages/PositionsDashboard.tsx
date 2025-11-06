@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { mockPositions } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,30 +25,18 @@ import { TrendingUp, TrendingDown, DollarSign, Activity } from "lucide-react";
 type CurrencyDisplay = 'USD' | 'SGD';
 
 export default function PositionsDashboard() {
+  const navigate = useNavigate();
   const [currency, setCurrency] = useState<CurrencyDisplay>('USD');
   const [currencyFilter, setCurrencyFilter] = useState('');
   const [lpFilter, setLpFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<keyof typeof mockPositions[0] | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [expandedPositions, setExpandedPositions] = useState<Set<string>>(new Set());
 
   const SGD_RATE = 1.3422;
 
   const convertToDisplayCurrency = (usdAmount: number) => {
     return currency === 'SGD' ? usdAmount * SGD_RATE : usdAmount;
-  };
-
-  const togglePosition = (positionId: string) => {
-    setExpandedPositions(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(positionId)) {
-        newSet.delete(positionId);
-      } else {
-        newSet.add(positionId);
-      }
-      return newSet;
-    });
   };
 
   const filteredAndSortedPositions = useMemo(() => {
@@ -227,7 +215,6 @@ export default function PositionsDashboard() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[50px]"></TableHead>
                 <TableHead>Position ID</TableHead>
                 <TableHead>Currency</TableHead>
                 <TableHead>Liquidity Provider</TableHead>
@@ -245,77 +232,28 @@ export default function PositionsDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredAndSortedPositions.map((position) => {
-                const isExpanded = expandedPositions.has(position.id);
-                return (
-                  <>
-                    <TableRow 
-                      key={position.id}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => togglePosition(position.id)}
-                    >
-                      <TableCell>
-                        {isExpanded ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4" />
-                        )}
-                      </TableCell>
-                      <TableCell className="font-medium">{position.id}</TableCell>
-                      <TableCell className="font-semibold">{position.currency}</TableCell>
-                      <TableCell>{position.liquidityProvider}</TableCell>
-                      <TableCell>{position.netPosition.toLocaleString()}</TableCell>
-                      <TableCell>{position.currentRate.toFixed(4)}</TableCell>
-                      <TableCell>{formatCurrency(position.mtmValue)}</TableCell>
-                      <TableCell className={position.unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'}>
-                        {formatPnL(position.unrealizedPnL)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={position.status === 'Open' ? 'default' : 'secondary'}>
-                          {position.status}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                    {isExpanded && (
-                      <TableRow key={`${position.id}-expanded`}>
-                        <TableCell colSpan={9} className="bg-muted/30 p-0">
-                          <div className="p-4 space-y-4">
-                            <h4 className="font-semibold text-sm">Underlying Trades</h4>
-                            {position.trades.map((trade) => (
-                              <div key={trade.id} className="border rounded-lg p-3 bg-background space-y-2">
-                                <div className="flex justify-between items-start">
-                                  <div>
-                                    <p className="text-sm font-medium">Trade: {trade.id}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                      Customer Order: {trade.customerOrder} | Date: {new Date(trade.tradeDate).toLocaleDateString()}
-                                    </p>
-                                    <p className="text-sm mt-1">
-                                      Original: <span className="font-semibold">{trade.originalPair}</span> {trade.originalAmount.toLocaleString()}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="pl-4 border-l-2 border-primary/20 space-y-1">
-                                  <p className="text-xs font-semibold text-muted-foreground">USD-Denominated Breakdown:</p>
-                                  {trade.usdLegs.map((leg, idx) => (
-                                    <div key={idx} className="text-sm flex justify-between items-center py-1">
-                                      <span>
-                                        <span className="font-medium">{leg.pair}</span>: {leg.amount.toLocaleString()} @ {leg.rate.toFixed(4)}
-                                      </span>
-                                      <span className="font-semibold">
-                                        USD {leg.usdEquivalent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </>
-                );
-              })}
+              {filteredAndSortedPositions.map((position) => (
+                <TableRow 
+                  key={position.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => navigate(`/positions/${position.currency}`)}
+                >
+                  <TableCell className="font-medium">{position.id}</TableCell>
+                  <TableCell className="font-semibold">{position.currency}</TableCell>
+                  <TableCell>{position.liquidityProvider}</TableCell>
+                  <TableCell>{position.netPosition.toLocaleString()}</TableCell>
+                  <TableCell>{position.currentRate.toFixed(4)}</TableCell>
+                  <TableCell>{formatCurrency(position.mtmValue)}</TableCell>
+                  <TableCell className={position.unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'}>
+                    {formatPnL(position.unrealizedPnL)}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={position.status === 'Open' ? 'default' : 'secondary'}>
+                      {position.status}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </CardContent>

@@ -9,6 +9,7 @@ import MTMValuation from "./pages/MTMValuation";
 import ManualHedgeEntry from "./pages/ManualHedgeEntry";
 import PositionReset from "./pages/PositionReset";
 import AuditTrail from "./pages/AuditTrail";
+import CurrencyOverview from "./pages/CurrencyOverview";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
         <MainLayout>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/positions/:currency" element={<CurrencyOverview />} />
             <Route path="/mtm" element={<MTMValuation />} />
             <Route path="/hedge" element={<ManualHedgeEntry />} />
             <Route path="/reset" element={<PositionReset />} />

@@ -1,32 +1,44 @@
 import { Position, Hedge, ResetRequest, AuditEvent, MarketRate, Trade, DirectTradingConfig } from '@/types/treasury';
 
-// G10 Currencies - Default Direct Trading Currencies
-export const G10_CURRENCIES = ['USD', 'EUR', 'JPY', 'GBP', 'AUD', 'CAD', 'CHF', 'NZD', 'SEK', 'NOK'];
+// G10 Currencies - Default Direct Trading Currencies (includes SGD)
+export const G10_CURRENCIES = ['USD', 'EUR', 'JPY', 'GBP', 'AUD', 'CAD', 'CHF', 'NZD', 'SEK', 'NOK', 'SGD'];
+
+// Additional non-G10 currencies for mock data showcase
+const ADDITIONAL_CURRENCIES = ['MYR', 'HKD', 'CNH'];
 
 // Helper to normalize pair keys (always alphabetical)
 export const normalizePair = (base: string, quote: string): string => {
   return [base, quote].sort().join('/');
 };
 
-// Initialize G10 pair configurations
-const initializeG10PairConfigs = (): Record<string, 'direct' | 'exotic'> => {
+// Initialize default pair configurations
+const initializeDefaultPairConfigs = (): Record<string, 'direct' | 'exotic'> => {
   const configs: Record<string, 'direct' | 'exotic'> = {};
-  // All G10xG10 pairs are 'direct'
+  
+  // All G10xG10 pairs are 'direct' (now includes SGD)
   for (let i = 0; i < G10_CURRENCIES.length; i++) {
     for (let j = i + 1; j < G10_CURRENCIES.length; j++) {
       const pair = normalizePair(G10_CURRENCIES[i], G10_CURRENCIES[j]);
       configs[pair] = 'direct';
     }
   }
+  
+  // Configure specific non-G10 pairs as examples
+  // MYR/HKD: Exotic (requires USD routing)
+  configs[normalizePair('MYR', 'HKD')] = 'exotic';
+  
+  // CNH/SGD: Exotic (requires USD routing)
+  configs[normalizePair('CNH', 'SGD')] = 'exotic';
+  
   return configs;
 };
 
 // Direct Trading Configuration
 export let directTradingConfig: DirectTradingConfig = {
   id: 'default-config',
-  currencies: [...G10_CURRENCIES],
+  currencies: [...G10_CURRENCIES, ...ADDITIONAL_CURRENCIES],
   hiddenCurrencies: [],
-  pairConfigurations: initializeG10PairConfigs(),
+  pairConfigurations: initializeDefaultPairConfigs(),
   lastModifiedBy: 'System',
   lastModifiedAt: new Date().toISOString(),
 };
@@ -114,7 +126,12 @@ export const mockMarketRates: MarketRate[] = [
   { pair: 'GBP/USD', bid: 1.2720, ask: 1.2725, mid: 1.2722, change: 0.0045, changePercent: 0.35, lastUpdate: new Date().toISOString() },
   { pair: 'AUD/USD', bid: 0.6580, ask: 0.6585, mid: 0.6582, change: -0.0008, changePercent: -0.12, lastUpdate: new Date().toISOString() },
   { pair: 'USD/JPY', bid: 149.25, ask: 149.30, mid: 149.27, change: 0.35, changePercent: 0.23, lastUpdate: new Date().toISOString() },
+  { pair: 'USD/MYR', bid: 4.4625, ask: 4.4675, mid: 4.4650, change: 0.0025, changePercent: 0.06, lastUpdate: new Date().toISOString() },
+  { pair: 'USD/HKD', bid: 7.8185, ask: 7.8215, mid: 7.8200, change: -0.0015, changePercent: -0.02, lastUpdate: new Date().toISOString() },
+  { pair: 'USD/CNH', bid: 7.2425, ask: 7.2475, mid: 7.2450, change: 0.0050, changePercent: 0.07, lastUpdate: new Date().toISOString() },
   { pair: 'EUR/SGD', bid: 1.4560, ask: 1.4565, mid: 1.4562, change: 0.0015, changePercent: 0.10, lastUpdate: new Date().toISOString() },
+  { pair: 'JPY/SGD', bid: 0.00898, ask: 0.00902, mid: 0.00900, change: 0.00003, changePercent: 0.33, lastUpdate: new Date().toISOString() },
+  { pair: 'AUD/SGD', bid: 0.8828, ask: 0.8836, mid: 0.8832, change: -0.0012, changePercent: -0.14, lastUpdate: new Date().toISOString() },
   { pair: 'GBP/SGD', bid: 1.7080, ask: 1.7085, mid: 1.7082, change: 0.0062, changePercent: 0.36, lastUpdate: new Date().toISOString() },
 ];
 
@@ -152,78 +169,66 @@ export const mockPositions: Position[] = [
           { pair: 'USDSGD', amount: 1500000, rate: 1.3400, usdEquivalent: 1500000, legType: 'Buy Leg' }
         ]
       },
-      // EUR/SGD - Exotic pair example
+      // EUR/SGD - Direct pair (G10xG10)
       {
         id: 'TRD-0002',
         tradeDate: new Date(Date.now() - 172800000).toISOString(),
         customerOrder: 'CUST-005',
         originalPair: 'EUR/SGD',
         originalAmount: 1000000,
-        isExoticPair: true,
-        decompositionReason: 'Exotic pair - USD routing required',
-        netUsdExposure: 1085000,
+        isExoticPair: false,
         usdLegs: [
-          { pair: 'EURUSD', amount: 1000000, rate: 1.0850, usdEquivalent: 1085000, legType: 'Sell Leg' },
-          { pair: 'USDSGD', amount: 1085000, rate: 1.3380, usdEquivalent: 1000000, legType: 'Buy Leg' }
+          { pair: 'EURSGD', amount: 1000000, rate: 1.4580, usdEquivalent: 1456200 }
         ]
       },
-      // JPY/SGD - Customer selling JPY, buying SGD
+      // JPY/SGD - Direct pair (G10xG10)
       {
         id: 'TRD-0008',
         tradeDate: new Date(Date.now() - 259200000).toISOString(),
         customerOrder: 'CUST-048',
         originalPair: 'JPY/SGD',
         originalAmount: 15000000, // 15M JPY
-        isExoticPair: true,
-        decompositionReason: 'Exotic pair - USD routing required',
-        netUsdExposure: 100334,
+        isExoticPair: false,
         usdLegs: [
-          { pair: 'USDJPY', amount: -15000000, rate: 149.50, usdEquivalent: 100334, legType: 'Sell Leg' },
-          { pair: 'USDSGD', amount: 100334, rate: 1.3385, usdEquivalent: 100334, legType: 'Buy Leg' }
+          { pair: 'JPYSGD', amount: 15000000, rate: 0.00900, usdEquivalent: 135000 }
         ]
       },
-      // AUD/SGD - Customer selling AUD, buying SGD
+      // AUD/SGD - Direct pair (G10xG10)
       {
         id: 'TRD-0009',
         tradeDate: new Date(Date.now() - 345600000).toISOString(),
         customerOrder: 'CUST-052',
         originalPair: 'AUD/SGD',
         originalAmount: 500000, // 500K AUD
-        isExoticPair: true,
-        decompositionReason: 'Exotic pair - USD routing required',
-        netUsdExposure: 329750,
+        isExoticPair: false,
         usdLegs: [
-          { pair: 'AUDUSD', amount: 500000, rate: 0.6595, usdEquivalent: 329750, legType: 'Sell Leg' },
-          { pair: 'USDSGD', amount: 329750, rate: 1.3390, usdEquivalent: 329750, legType: 'Buy Leg' }
+          { pair: 'AUDSGD', amount: 500000, rate: 0.8832, usdEquivalent: 441600 }
         ]
       },
-      // GBP/SGD - Customer buying GBP, selling SGD (negative amount)
+      // GBP/SGD - Direct pair (G10xG10)
       {
         id: 'TRD-0010',
         tradeDate: new Date(Date.now() - 432000000).toISOString(),
         customerOrder: 'CUST-061',
         originalPair: 'GBP/SGD',
         originalAmount: -300000, // Selling 300K GBP (negative)
-        isExoticPair: true,
-        decompositionReason: 'Exotic pair - USD routing required',
-        netUsdExposure: -381300,
+        isExoticPair: false,
         usdLegs: [
-          { pair: 'GBPUSD', amount: -300000, rate: 1.2710, usdEquivalent: -381300, legType: 'Buy Leg' },
-          { pair: 'USDSGD', amount: -381300, rate: 1.3395, usdEquivalent: -381300, legType: 'Sell Leg' }
+          { pair: 'GBPSGD', amount: -300000, rate: 1.7082, usdEquivalent: -512460 }
         ]
       },
-      // CNY/SGD - Customer selling CNY, buying SGD
+      // CNH/SGD - Exotic pair (non-G10 requires USD routing)
       {
         id: 'TRD-0011',
         tradeDate: new Date(Date.now() - 518400000).toISOString(),
         customerOrder: 'CUST-073',
-        originalPair: 'CNY/SGD',
-        originalAmount: 3000000, // 3M CNY
+        originalPair: 'CNH/SGD',
+        originalAmount: 3000000, // 3M CNH
         isExoticPair: true,
         decompositionReason: 'Exotic pair - USD routing required',
         netUsdExposure: 414079,
         usdLegs: [
-          { pair: 'USDCNY', amount: -3000000, rate: 7.2450, usdEquivalent: 414079, legType: 'Sell Leg' },
+          { pair: 'USDCNH', amount: -3000000, rate: 7.2450, usdEquivalent: 414079, legType: 'Sell Leg' },
           { pair: 'USDSGD', amount: 414079, rate: 1.3400, usdEquivalent: 414079, legType: 'Buy Leg' }
         ]
       }
@@ -297,19 +302,16 @@ export const mockPositions: Position[] = [
           { pair: 'AUDUSD', amount: -950000, rate: 0.6620, usdEquivalent: -628900, legType: 'Sell Leg' }
         ]
       },
-      // Corresponding AUD/SGD trade (creates positive AUD position)
+      // Corresponding AUD/SGD trade - Direct pair (G10xG10)
       {
         id: 'TRD-0009-AUD',
         tradeDate: new Date(Date.now() - 345600000).toISOString(),
         customerOrder: 'CUST-052',
         originalPair: 'AUD/SGD',
         originalAmount: 500000, // Selling 500K AUD
-        isExoticPair: true,
-        decompositionReason: 'Exotic pair - USD routing required',
-        netUsdExposure: 329750,
+        isExoticPair: false,
         usdLegs: [
-          { pair: 'AUDUSD', amount: 500000, rate: 0.6595, usdEquivalent: 329750, legType: 'Sell Leg' },
-          { pair: 'USDSGD', amount: 329750, rate: 1.3390, usdEquivalent: 329750, legType: 'Buy Leg' }
+          { pair: 'AUDSGD', amount: 500000, rate: 0.8832, usdEquivalent: 441600 }
         ]
       }
     ]
@@ -336,19 +338,16 @@ export const mockPositions: Position[] = [
           { pair: 'USDJPY', amount: 3200000, rate: 148.80, usdEquivalent: 21505, legType: 'Buy Leg' }
         ]
       },
-      // Corresponding JPY/SGD trade (creates negative JPY position)
+      // Corresponding JPY/SGD trade - Direct pair (G10xG10)
       {
         id: 'TRD-0008-JPY',
         tradeDate: new Date(Date.now() - 259200000).toISOString(),
         customerOrder: 'CUST-048',
         originalPair: 'JPY/SGD',
         originalAmount: -15000000, // Selling 15M JPY
-        isExoticPair: true,
-        decompositionReason: 'Exotic pair - USD routing required',
-        netUsdExposure: -100334,
+        isExoticPair: false,
         usdLegs: [
-          { pair: 'USDJPY', amount: -15000000, rate: 149.50, usdEquivalent: -100334, legType: 'Sell Leg' },
-          { pair: 'USDSGD', amount: 100334, rate: 1.3385, usdEquivalent: 100334, legType: 'Buy Leg' }
+          { pair: 'JPYSGD', amount: -15000000, rate: 0.00900, usdEquivalent: -135000 }
         ]
       }
     ]
@@ -380,12 +379,12 @@ export const mockPositions: Position[] = [
       }
     ]
   },
-  // New CNY position from exotic CNY/SGD trade
+  // CNH position from exotic CNH/SGD trade
   {
     id: 'POS-0007',
-    currency: 'CNY',
+    currency: 'CNH',
     liquidityProvider: 'HSBC',
-    netPosition: -3000000, // Negative from selling CNY
+    netPosition: -3000000, // Negative from selling CNH
     currentRate: 7.2450,
     mtmValue: -414079,
     unrealizedPnL: -2100,
@@ -393,16 +392,16 @@ export const mockPositions: Position[] = [
     status: 'Open',
     trades: [
       {
-        id: 'TRD-0011-CNY',
+        id: 'TRD-0011-CNH',
         tradeDate: new Date(Date.now() - 518400000).toISOString(),
         customerOrder: 'CUST-073',
-        originalPair: 'CNY/SGD',
-        originalAmount: -3000000, // Selling 3M CNY
+        originalPair: 'CNH/SGD',
+        originalAmount: -3000000, // Selling 3M CNH
         isExoticPair: true,
         decompositionReason: 'Exotic pair - USD routing required',
         netUsdExposure: -414079,
         usdLegs: [
-          { pair: 'USDCNY', amount: -3000000, rate: 7.2450, usdEquivalent: -414079, legType: 'Sell Leg' },
+          { pair: 'USDCNH', amount: -3000000, rate: 7.2450, usdEquivalent: -414079, legType: 'Sell Leg' },
           { pair: 'USDSGD', amount: 414079, rate: 1.3400, usdEquivalent: 414079, legType: 'Buy Leg' }
         ]
       }
@@ -484,6 +483,26 @@ export const mockResetRequests: ResetRequest[] = [
 ];
 
 export const mockAuditEvents: AuditEvent[] = [
+  {
+    id: 'AUD-0000',
+    timestamp: new Date(Date.now() - 2592000000).toISOString(), // 30 days ago
+    eventType: 'Configuration Change',
+    description: 'Updated Direct Trading Configuration: Added SGD to G10 currencies and configured MYR, HKD, CNH pairs',
+    user: 'system@4xcommand.com',
+    details: {
+      currenciesAdded: ['SGD', 'MYR', 'HKD', 'CNH'],
+      pairsConfigured: {
+        'EUR/SGD': 'direct',
+        'JPY/SGD': 'direct',
+        'AUD/SGD': 'direct',
+        'GBP/SGD': 'direct',
+        'MYR/HKD': 'exotic',
+        'CNH/SGD': 'exotic'
+      },
+      rationale: 'SGD elevated to G10 status for direct trading. Regional currencies MYR, HKD, CNH added for Asia-Pacific market coverage.'
+    },
+    status: 'Completed',
+  },
   {
     id: 'AUD-0001',
     timestamp: new Date(Date.now() - 900000).toISOString(),

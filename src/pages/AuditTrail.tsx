@@ -64,6 +64,7 @@ export default function AuditTrail() {
                 <SelectItem value="Hedge Entry">Hedge Entry</SelectItem>
                 <SelectItem value="Approval">Approval</SelectItem>
                 <SelectItem value="Rate Update">Rate Update</SelectItem>
+                <SelectItem value="Configuration Change">Configuration Change</SelectItem>
               </SelectContent>
             </Select>
 
@@ -134,14 +135,47 @@ export default function AuditTrail() {
                     {Object.keys(event.details).length > 0 && (
                       <div className="mt-4 bg-muted p-3 rounded text-sm">
                         <div className="font-medium mb-2">Event Details:</div>
-                        <div className="grid gap-2">
-                          {Object.entries(event.details).map(([key, value]) => (
-                            <div key={key} className="flex gap-2">
-                              <span className="text-muted-foreground">{key}:</span>
-                              <span className="font-medium">{String(value)}</span>
+                        {event.eventType === 'Configuration Change' && event.details.added && event.details.removed ? (
+                          <div className="space-y-3">
+                            {event.details.added.length > 0 && (
+                              <div>
+                                <span className="text-muted-foreground">Added Currencies:</span>
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {(event.details.added as string[]).map((currency) => (
+                                    <Badge key={currency} className="bg-direct text-direct-foreground">
+                                      +{currency}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {event.details.removed.length > 0 && (
+                              <div>
+                                <span className="text-muted-foreground">Removed Currencies:</span>
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {(event.details.removed as string[]).map((currency) => (
+                                    <Badge key={currency} variant="destructive">
+                                      -{currency}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            <div>
+                              <span className="text-muted-foreground">Impact:</span>
+                              <span className="font-medium ml-2">{event.details.impactScope}</span>
                             </div>
-                          ))}
-                        </div>
+                          </div>
+                        ) : (
+                          <div className="grid gap-2">
+                            {Object.entries(event.details).map(([key, value]) => (
+                              <div key={key} className="flex gap-2">
+                                <span className="text-muted-foreground">{key}:</span>
+                                <span className="font-medium">{String(value)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

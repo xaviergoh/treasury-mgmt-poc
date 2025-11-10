@@ -151,10 +151,10 @@ export default function CurrencyOverview() {
 
       {/* Exotic Trades Summary */}
       {exoticMetrics.totalExoticTrades > 0 && (
-        <Card className="bg-primary/5 border-primary/20">
+        <Card className="bg-exotic/5 border-exotic/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Badge variant="secondary" className="bg-primary/10">Exotic Trades</Badge>
+              <Badge className="bg-exotic text-exotic-foreground">Exotic Trades</Badge>
               USD Decomposition Summary
             </CardTitle>
           </CardHeader>
@@ -323,8 +323,14 @@ export default function CurrencyOverview() {
                       <TableCell className="font-semibold">
                         <div className="flex items-center gap-2">
                           {trade.originalPair}
-                          {trade.isExoticPair && (
-                            <Badge variant="secondary" className="text-xs bg-primary/10">Exotic</Badge>
+                          {trade.isExoticPair ? (
+                            <Badge className="text-xs bg-exotic text-exotic-foreground hover:bg-exotic/80">
+                              Exotic
+                            </Badge>
+                          ) : (
+                            <Badge className="text-xs bg-direct text-direct-foreground hover:bg-direct/80">
+                              Direct
+                            </Badge>
                           )}
                         </div>
                         {trade.isExoticPair && trade.originalPair && (

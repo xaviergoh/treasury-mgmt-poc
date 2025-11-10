@@ -1,4 +1,63 @@
-import { Position, Hedge, ResetRequest, AuditEvent, MarketRate, Trade } from '@/types/treasury';
+import { Position, Hedge, ResetRequest, AuditEvent, MarketRate, Trade, DirectTradingConfig } from '@/types/treasury';
+
+// G10 Currencies - Default Direct Trading Currencies
+export const G10_CURRENCIES = ['USD', 'EUR', 'JPY', 'GBP', 'AUD', 'CAD', 'CHF', 'NZD', 'SEK', 'NOK'];
+
+// Direct Trading Configuration
+export let directTradingConfig: DirectTradingConfig = {
+  id: 'default-config',
+  currencies: [...G10_CURRENCIES],
+  lastModifiedBy: 'System',
+  lastModifiedAt: new Date().toISOString(),
+};
+
+// Helper function to check if a currency pair trades directly
+export const isDirectPair = (baseCcy: string, quoteCcy: string): boolean => {
+  return directTradingConfig.currencies.includes(baseCcy) && 
+         directTradingConfig.currencies.includes(quoteCcy);
+};
+
+// Helper function to update configuration
+export const updateDirectTradingConfig = (newCurrencies: string[], user: string): DirectTradingConfig => {
+  const previousConfig = { ...directTradingConfig };
+  directTradingConfig = {
+    id: directTradingConfig.id,
+    currencies: [...newCurrencies],
+    lastModifiedBy: user,
+    lastModifiedAt: new Date().toISOString(),
+    previousCurrencies: previousConfig.currencies,
+  };
+  return directTradingConfig;
+};
+
+// Helper function to log configuration changes to audit trail
+export const logConfigChange = (
+  previousCurrencies: string[],
+  newCurrencies: string[],
+  user: string
+): AuditEvent => {
+  const added = newCurrencies.filter(c => !previousCurrencies.includes(c));
+  const removed = previousCurrencies.filter(c => !newCurrencies.includes(c));
+  
+  const event: AuditEvent = {
+    id: `AUD-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    eventType: 'Configuration Change',
+    description: 'Direct Trading Currencies configuration updated',
+    user,
+    details: {
+      previousCurrencies,
+      newCurrencies,
+      added,
+      removed,
+      impactScope: 'Applies to new trades only',
+    },
+    status: 'Completed',
+  };
+  
+  mockAuditEvents.unshift(event);
+  return event;
+};
 
 export const mockMarketRates: MarketRate[] = [
   { pair: 'USD/SGD', bid: 1.3420, ask: 1.3425, mid: 1.3422, change: 0.0012, changePercent: 0.09, lastUpdate: new Date().toISOString() },

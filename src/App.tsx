@@ -10,6 +10,7 @@ import ManualHedgeEntry from "./pages/ManualHedgeEntry";
 import PositionReset from "./pages/PositionReset";
 import AuditTrail from "./pages/AuditTrail";
 import CurrencyOverview from "./pages/CurrencyOverview";
+import DirectTradingConfig from "./pages/DirectTradingConfig";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/hedge" element={<ManualHedgeEntry />} />
             <Route path="/reset" element={<PositionReset />} />
             <Route path="/audit" element={<AuditTrail />} />
+            <Route path="/admin/direct-trading" element={<DirectTradingConfig />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </MainLayout>

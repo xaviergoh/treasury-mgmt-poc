@@ -50,6 +50,14 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        direct: {
+          DEFAULT: "hsl(var(--direct))",
+          foreground: "hsl(var(--direct-foreground))",
+        },
+        exotic: {
+          DEFAULT: "hsl(var(--exotic))",
+          foreground: "hsl(var(--exotic-foreground))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

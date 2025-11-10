@@ -67,11 +67,26 @@ export interface Approval {
 export interface AuditEvent {
   id: string;
   timestamp: string;
-  eventType: 'Position Reset' | 'Hedge Entry' | 'Approval' | 'Rate Update';
+  eventType: 'Position Reset' | 'Hedge Entry' | 'Approval' | 'Rate Update' | 'Configuration Change';
   description: string;
   user: string;
   details: Record<string, any>;
   status: string;
+}
+
+export interface DirectTradingConfig {
+  id: string;
+  currencies: string[];
+  lastModifiedBy: string;
+  lastModifiedAt: string;
+  previousCurrencies?: string[];
+}
+
+export interface CurrencyPairStatus {
+  base: string;
+  quote: string;
+  isDirect: boolean;
+  reason: string;
 }
 
 export interface MarketRate {

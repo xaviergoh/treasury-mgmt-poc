@@ -3,26 +3,59 @@ import { Position, Hedge, ResetRequest, AuditEvent, MarketRate, Trade, DirectTra
 // G10 Currencies - Default Direct Trading Currencies
 export const G10_CURRENCIES = ['USD', 'EUR', 'JPY', 'GBP', 'AUD', 'CAD', 'CHF', 'NZD', 'SEK', 'NOK'];
 
+// Helper to normalize pair keys (always alphabetical)
+export const normalizePair = (base: string, quote: string): string => {
+  return [base, quote].sort().join('/');
+};
+
+// Initialize G10 pair configurations
+const initializeG10PairConfigs = (): Record<string, 'direct' | 'exotic'> => {
+  const configs: Record<string, 'direct' | 'exotic'> = {};
+  // All G10xG10 pairs are 'direct'
+  for (let i = 0; i < G10_CURRENCIES.length; i++) {
+    for (let j = i + 1; j < G10_CURRENCIES.length; j++) {
+      const pair = normalizePair(G10_CURRENCIES[i], G10_CURRENCIES[j]);
+      configs[pair] = 'direct';
+    }
+  }
+  return configs;
+};
+
 // Direct Trading Configuration
 export let directTradingConfig: DirectTradingConfig = {
   id: 'default-config',
   currencies: [...G10_CURRENCIES],
+  hiddenCurrencies: [],
+  pairConfigurations: initializeG10PairConfigs(),
   lastModifiedBy: 'System',
   lastModifiedAt: new Date().toISOString(),
 };
 
 // Helper function to check if a currency pair trades directly
 export const isDirectPair = (baseCcy: string, quoteCcy: string): boolean => {
-  return directTradingConfig.currencies.includes(baseCcy) && 
-         directTradingConfig.currencies.includes(quoteCcy);
+  const pair = normalizePair(baseCcy, quoteCcy);
+  return directTradingConfig.pairConfigurations[pair] === 'direct';
+};
+
+// Helper to get pair status
+export const getPairStatus = (base: string, quote: string): 'direct' | 'exotic' => {
+  const pair = normalizePair(base, quote);
+  return directTradingConfig.pairConfigurations[pair] || 'exotic';
 };
 
 // Helper function to update configuration
-export const updateDirectTradingConfig = (newCurrencies: string[], user: string): DirectTradingConfig => {
+export const updateDirectTradingConfig = (
+  newCurrencies: string[], 
+  newPairConfigs: Record<string, 'direct' | 'exotic'>,
+  newHiddenCurrencies: string[],
+  user: string
+): DirectTradingConfig => {
   const previousConfig = { ...directTradingConfig };
   directTradingConfig = {
     id: directTradingConfig.id,
     currencies: [...newCurrencies],
+    hiddenCurrencies: [...newHiddenCurrencies],
+    pairConfigurations: { ...newPairConfigs },
     lastModifiedBy: user,
     lastModifiedAt: new Date().toISOString(),
     previousCurrencies: previousConfig.currencies,
@@ -34,22 +67,38 @@ export const updateDirectTradingConfig = (newCurrencies: string[], user: string)
 export const logConfigChange = (
   previousCurrencies: string[],
   newCurrencies: string[],
+  previousPairConfigs: Record<string, 'direct' | 'exotic'>,
+  newPairConfigs: Record<string, 'direct' | 'exotic'>,
   user: string
 ): AuditEvent => {
   const added = newCurrencies.filter(c => !previousCurrencies.includes(c));
   const removed = previousCurrencies.filter(c => !newCurrencies.includes(c));
   
+  // Track pair changes
+  const pairsChanged: Array<{ pair: string; from: 'direct' | 'exotic'; to: 'direct' | 'exotic' }> = [];
+  const allPairs = new Set([...Object.keys(previousPairConfigs), ...Object.keys(newPairConfigs)]);
+  
+  allPairs.forEach(pair => {
+    const oldStatus = previousPairConfigs[pair];
+    const newStatus = newPairConfigs[pair];
+    if (oldStatus && newStatus && oldStatus !== newStatus) {
+      pairsChanged.push({ pair, from: oldStatus, to: newStatus });
+    }
+  });
+  
   const event: AuditEvent = {
     id: `AUD-${Date.now()}`,
     timestamp: new Date().toISOString(),
     eventType: 'Configuration Change',
-    description: 'Direct Trading Currencies configuration updated',
+    description: 'Direct Trading configuration updated',
     user,
     details: {
       previousCurrencies,
       newCurrencies,
-      added,
-      removed,
+      currenciesAdded: added,
+      currenciesRemoved: removed,
+      pairsChanged,
+      totalPairsModified: pairsChanged.length,
       impactScope: 'Applies to new trades only',
     },
     status: 'Completed',

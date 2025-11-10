@@ -135,13 +135,13 @@ export default function AuditTrail() {
                     {Object.keys(event.details).length > 0 && (
                       <div className="mt-4 bg-muted p-3 rounded text-sm">
                         <div className="font-medium mb-2">Event Details:</div>
-                        {event.eventType === 'Configuration Change' && event.details.added && event.details.removed ? (
+                        {event.eventType === 'Configuration Change' && event.details.currenciesAdded && event.details.currenciesRemoved ? (
                           <div className="space-y-3">
-                            {event.details.added.length > 0 && (
+                            {event.details.currenciesAdded.length > 0 && (
                               <div>
                                 <span className="text-muted-foreground">Added Currencies:</span>
                                 <div className="flex flex-wrap gap-1 mt-1">
-                                  {(event.details.added as string[]).map((currency) => (
+                                  {(event.details.currenciesAdded as string[]).map((currency) => (
                                     <Badge key={currency} className="bg-direct text-direct-foreground">
                                       +{currency}
                                     </Badge>
@@ -149,14 +149,33 @@ export default function AuditTrail() {
                                 </div>
                               </div>
                             )}
-                            {event.details.removed.length > 0 && (
+                            {event.details.currenciesRemoved.length > 0 && (
                               <div>
                                 <span className="text-muted-foreground">Removed Currencies:</span>
                                 <div className="flex flex-wrap gap-1 mt-1">
-                                  {(event.details.removed as string[]).map((currency) => (
+                                  {(event.details.currenciesRemoved as string[]).map((currency) => (
                                     <Badge key={currency} variant="destructive">
                                       -{currency}
                                     </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {event.details.pairsChanged && Array.isArray(event.details.pairsChanged) && event.details.pairsChanged.length > 0 && (
+                              <div>
+                                <span className="text-muted-foreground">Pairs Changed ({event.details.pairsChanged.length}):</span>
+                                <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
+                                  {(event.details.pairsChanged as any[]).map((change: any, idx: number) => (
+                                    <div key={idx} className="text-xs font-mono flex items-center gap-2">
+                                      <span className="font-semibold">{change.pair}</span>: 
+                                      <Badge variant="outline" className="bg-exotic text-exotic-foreground text-[10px] px-1 py-0">
+                                        {change.from}
+                                      </Badge>
+                                      <span>→</span>
+                                      <Badge variant="outline" className="bg-direct text-direct-foreground text-[10px] px-1 py-0">
+                                        {change.to}
+                                      </Badge>
+                                    </div>
                                   ))}
                                 </div>
                               </div>

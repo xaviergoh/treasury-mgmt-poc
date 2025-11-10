@@ -5,10 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CurrencyPairMatrix } from '@/components/CurrencyPairMatrix';
+import { DefaultRoutingDialog } from '@/components/DefaultRoutingDialog';
 import { useDirectTradingConfig } from '@/hooks/useDirectTradingConfig';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Save, X, RotateCcw, AlertCircle, CheckCircle } from 'lucide-react';
-import { G10_CURRENCIES } from '@/data/mockData';
+import { G10_CURRENCIES, normalizePair } from '@/data/mockData';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const DirectTradingConfig = () => {
@@ -17,12 +18,40 @@ const DirectTradingConfig = () => {
   const { config, availableCurrencies, updateConfig, checkCurrencyHasPositions } = useDirectTradingConfig();
   
   const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>(config.currencies);
+  const [stagedPairConfigurations, setStagedPairConfigurations] = useState<Record<string, 'direct' | 'exotic'>>(
+    config.pairConfigurations
+  );
+  const [hiddenCurrencies, setHiddenCurrencies] = useState<string[]>(config.hiddenCurrencies);
   const [currencyToAdd, setCurrencyToAdd] = useState<string>('');
   const [warnings, setWarnings] = useState<string[]>([]);
+  const [showRoutingDialog, setShowRoutingDialog] = useState(false);
+  const [pendingCurrency, setPendingCurrency] = useState<string>('');
+
+  // Track modified pairs
+  const modifiedPairs = useMemo(() => {
+    const modified = new Set<string>();
+    const allPairs = new Set([
+      ...Object.keys(config.pairConfigurations),
+      ...Object.keys(stagedPairConfigurations),
+    ]);
+
+    allPairs.forEach(pair => {
+      const originalStatus = config.pairConfigurations[pair];
+      const stagedStatus = stagedPairConfigurations[pair];
+      if (originalStatus !== stagedStatus) {
+        modified.add(pair);
+      }
+    });
+
+    return modified;
+  }, [config.pairConfigurations, stagedPairConfigurations]);
 
   const hasUnsavedChanges = useMemo(() => {
-    return JSON.stringify(selectedCurrencies.sort()) !== JSON.stringify(config.currencies.sort());
-  }, [selectedCurrencies, config.currencies]);
+    const currenciesChanged = 
+      JSON.stringify(selectedCurrencies.sort()) !== JSON.stringify(config.currencies.sort());
+    const pairsChanged = modifiedPairs.size > 0;
+    return currenciesChanged || pairsChanged;
+  }, [selectedCurrencies, config.currencies, modifiedPairs]);
 
   const handleAddCurrency = () => {
     if (!currencyToAdd) return;
@@ -47,13 +76,62 @@ const DirectTradingConfig = () => {
       });
     }
 
-    setSelectedCurrencies(prev => [...prev, currencyToAdd].sort());
+    // Show routing dialog
+    setPendingCurrency(currencyToAdd);
+    setShowRoutingDialog(true);
     setCurrencyToAdd('');
+  };
+
+  const handleRoutingConfirm = (defaultRouting: 'direct' | 'exotic') => {
+    // Add currency
+    const newCurrencies = [...selectedCurrencies, pendingCurrency].sort();
+    setSelectedCurrencies(newCurrencies);
+
+    // Remove from hidden if it was there
+    setHiddenCurrencies(prev => prev.filter(c => c !== pendingCurrency));
+
+    // Create pair configurations for all pairs involving the new currency
+    const updatedPairConfigs = { ...stagedPairConfigurations };
+    selectedCurrencies.forEach(existingCurrency => {
+      const pair = normalizePair(pendingCurrency, existingCurrency);
+      updatedPairConfigs[pair] = defaultRouting;
+    });
+    setStagedPairConfigurations(updatedPairConfigs);
+
+    setShowRoutingDialog(false);
+    setPendingCurrency('');
+
+    toast({
+      title: 'Currency Added',
+      description: `${pendingCurrency} added with ${defaultRouting} routing for all pairs`,
+    });
+  };
+
+  const handleRoutingCancel = () => {
+    setShowRoutingDialog(false);
+    setPendingCurrency('');
   };
 
   const handleRemoveCurrency = (currency: string) => {
     setSelectedCurrencies(prev => prev.filter(c => c !== currency));
+    setHiddenCurrencies(prev => [...prev, currency]);
     setWarnings(prev => prev.filter(w => !w.includes(currency)));
+    
+    toast({
+      title: 'Currency Hidden',
+      description: `${currency} removed from matrix (pair configurations retained)`,
+    });
+  };
+
+  const handlePairToggle = (base: string, quote: string) => {
+    const pair = normalizePair(base, quote);
+    const currentStatus = stagedPairConfigurations[pair] || 'exotic';
+    const newStatus = currentStatus === 'direct' ? 'exotic' : 'direct';
+    
+    setStagedPairConfigurations(prev => ({
+      ...prev,
+      [pair]: newStatus,
+    }));
   };
 
   const handleSave = () => {
@@ -74,30 +152,47 @@ const DirectTradingConfig = () => {
       });
     }
 
-    updateConfig(selectedCurrencies);
+    updateConfig(selectedCurrencies, stagedPairConfigurations, hiddenCurrencies);
     setWarnings([]);
     
+    const pairChangesCount = modifiedPairs.size;
     toast({
       title: 'Configuration Saved',
-      description: `Direct Trading Currencies updated successfully. Configuration logged to audit trail.`,
+      description: `Updated ${selectedCurrencies.length} currencies and ${pairChangesCount} pair routing${pairChangesCount !== 1 ? 's' : ''}. Logged to audit trail.`,
     });
   };
 
   const handleReset = () => {
     setSelectedCurrencies([...G10_CURRENCIES]);
+    
+    // Reset to G10 pair configurations (all direct)
+    const g10PairConfigs: Record<string, 'direct' | 'exotic'> = {};
+    for (let i = 0; i < G10_CURRENCIES.length; i++) {
+      for (let j = i + 1; j < G10_CURRENCIES.length; j++) {
+        const pair = normalizePair(G10_CURRENCIES[i], G10_CURRENCIES[j]);
+        g10PairConfigs[pair] = 'direct';
+      }
+    }
+    setStagedPairConfigurations(g10PairConfigs);
+    setHiddenCurrencies([]);
     setWarnings([]);
+    
     toast({
       title: 'Reset to G10',
-      description: 'Configuration reset to G10 currencies',
+      description: 'Configuration reset to G10 currencies with all pairs as direct',
     });
   };
 
   const handleCancel = () => {
     setSelectedCurrencies(config.currencies);
+    setStagedPairConfigurations(config.pairConfigurations);
+    setHiddenCurrencies(config.hiddenCurrencies);
     setWarnings([]);
   };
 
-  const availableToAdd = availableCurrencies.filter(c => !selectedCurrencies.includes(c));
+  const availableToAdd = availableCurrencies.filter(
+    c => !selectedCurrencies.includes(c) && !hiddenCurrencies.includes(c)
+  );
 
   return (
     <div className="space-y-6">
@@ -107,9 +202,9 @@ const DirectTradingConfig = () => {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Direct Trading Currencies</h1>
+            <h1 className="text-3xl font-bold text-foreground">Direct Trading Configuration</h1>
             <p className="text-muted-foreground mt-1">
-              Configure which currencies can trade directly without USD decomposition
+              Configure currency pairs and their routing behavior
             </p>
           </div>
         </div>
@@ -131,11 +226,23 @@ const DirectTradingConfig = () => {
         </Alert>
       )}
 
+      {hasUnsavedChanges && (
+        <Alert className="border-primary/50 bg-primary/5">
+          <AlertCircle className="h-4 w-4 text-primary" />
+          <AlertDescription className="flex items-center justify-between">
+            <span className="text-primary">
+              <strong>{modifiedPairs.size} pair{modifiedPairs.size !== 1 ? 's' : ''}</strong> modified. 
+              Click Save to apply or Cancel to discard.
+            </span>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Currency Selection</CardTitle>
           <CardDescription>
-            Add or remove currencies from the Direct Trading configuration. Changes apply to new trades only.
+            Add or remove currencies from the configuration. Set default routing for new currency pairs.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -188,15 +295,6 @@ const DirectTradingConfig = () => {
             </div>
           </div>
 
-          {hasUnsavedChanges && (
-            <Alert className="border-primary/50 bg-primary/5">
-              <AlertCircle className="h-4 w-4 text-primary" />
-              <AlertDescription className="text-primary">
-                You have unsaved changes. Click Save to apply or Cancel to discard.
-              </AlertDescription>
-            </Alert>
-          )}
-
           <div className="flex items-center justify-between pt-4 border-t border-border">
             <div className="text-sm text-muted-foreground">
               Last modified by <strong>{config.lastModifiedBy}</strong> on{' '}
@@ -217,13 +315,19 @@ const DirectTradingConfig = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Real-Time Currency Pair Matrix</CardTitle>
+          <CardTitle>Interactive Currency Pair Matrix</CardTitle>
           <CardDescription>
-            Visual preview showing which currency pairs will trade directly vs. requiring USD decomposition
+            Click any cell to toggle between Direct and Exotic routing for that pair
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <CurrencyPairMatrix currencies={selectedCurrencies} highlightChanges={hasUnsavedChanges} />
+          <CurrencyPairMatrix 
+            currencies={selectedCurrencies} 
+            pairConfigurations={stagedPairConfigurations}
+            modifiedPairs={modifiedPairs}
+            onPairToggle={handlePairToggle}
+            highlightChanges={hasUnsavedChanges} 
+          />
         </CardContent>
       </Card>
 
@@ -240,30 +344,38 @@ const DirectTradingConfig = () => {
                 <h4 className="font-semibold text-sm">Direct Pairs</h4>
               </div>
               <p className="text-sm text-muted-foreground">
-                When both currencies in a pair are in the configuration, the trade executes directly without USD
-                decomposition. Creates single position entries but still calculates USD equivalent for MTM reporting.
+                Trade directly without USD decomposition. Creates single position entries but still calculates USD
+                equivalent for MTM reporting.
               </p>
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-exotic" />
-                <h4 className="font-semibold text-sm">Exotic Pairs</h4>
+                <h4 className="font-semibold text-sm">Exotic Pairs (USD Routing)</h4>
               </div>
               <p className="text-sm text-muted-foreground">
-                When one or both currencies are not in the configuration, the trade is decomposed into two USD legs,
-                creating intermediate USD exposure and separate position entries for each leg.
+                Route through two USD legs, creating intermediate USD exposure and separate position entries for
+                each leg.
               </p>
             </div>
           </div>
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              <strong>Important:</strong> This configuration applies to NEW trades only. Existing positions and trades
-              remain unchanged. Changes are logged to the audit trail for compliance.
+              <strong>Important:</strong> Configuration applies to NEW trades only. Existing positions remain
+              unchanged. All changes are logged to the audit trail for compliance.
             </AlertDescription>
           </Alert>
         </CardContent>
       </Card>
+
+      <DefaultRoutingDialog
+        open={showRoutingDialog}
+        currency={pendingCurrency}
+        existingCurrencies={selectedCurrencies}
+        onConfirm={handleRoutingConfirm}
+        onCancel={handleRoutingCancel}
+      />
     </div>
   );
 };

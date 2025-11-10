@@ -76,7 +76,9 @@ export interface AuditEvent {
 
 export interface DirectTradingConfig {
   id: string;
-  currencies: string[];
+  currencies: string[]; // Active currencies shown in matrix
+  hiddenCurrencies: string[]; // Removed currencies (configs retained)
+  pairConfigurations: Record<string, 'direct' | 'exotic'>; // e.g., "EUR/SGD": "direct"
   lastModifiedBy: string;
   lastModifiedAt: string;
   previousCurrencies?: string[];

@@ -20,11 +20,17 @@ export const useDirectTradingConfig = () => {
     setAvailableCurrencies(Array.from(currencies).sort());
   }, []);
 
-  const updateConfig = (newCurrencies: string[], user: string = 'admin@treasury.com') => {
+  const updateConfig = (
+    newCurrencies: string[], 
+    newPairConfigs: Record<string, 'direct' | 'exotic'>,
+    newHiddenCurrencies: string[],
+    user: string = 'admin@treasury.com'
+  ) => {
     const previousCurrencies = config.currencies;
-    const updatedConfig = updateDirectTradingConfig(newCurrencies, user);
+    const previousPairConfigs = config.pairConfigurations;
+    const updatedConfig = updateDirectTradingConfig(newCurrencies, newPairConfigs, newHiddenCurrencies, user);
     setConfig(updatedConfig);
-    logConfigChange(previousCurrencies, newCurrencies, user);
+    logConfigChange(previousCurrencies, newCurrencies, previousPairConfigs, newPairConfigs, user);
     return updatedConfig;
   };
 

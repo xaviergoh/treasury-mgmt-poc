@@ -46,12 +46,13 @@ const DirectTradingConfig = () => {
     return modified;
   }, [config.pairConfigurations, stagedPairConfigurations]);
 
-  const hasUnsavedChanges = useMemo(() => {
-    const currenciesChanged = 
-      JSON.stringify(selectedCurrencies.sort()) !== JSON.stringify(config.currencies.sort());
-    const pairsChanged = modifiedPairs.size > 0;
-    return currenciesChanged || pairsChanged;
-  }, [selectedCurrencies, config.currencies, modifiedPairs]);
+  const hasCurrencyChanges = useMemo(() => {
+    return JSON.stringify(selectedCurrencies.sort()) !== JSON.stringify(config.currencies.sort());
+  }, [selectedCurrencies, config.currencies]);
+
+  const hasPairChanges = useMemo(() => {
+    return modifiedPairs.size > 0;
+  }, [modifiedPairs]);
 
   const handleAddCurrency = () => {
     if (!currencyToAdd) return;
@@ -134,7 +135,7 @@ const DirectTradingConfig = () => {
     }));
   };
 
-  const handleSave = () => {
+  const handleSaveCurrencies = () => {
     if (selectedCurrencies.length < 2) {
       toast({
         title: 'Validation Error',
@@ -155,10 +156,24 @@ const DirectTradingConfig = () => {
     updateConfig(selectedCurrencies, stagedPairConfigurations, hiddenCurrencies);
     setWarnings([]);
     
-    const pairChangesCount = modifiedPairs.size;
     toast({
-      title: 'Configuration Saved',
-      description: `Updated ${selectedCurrencies.length} currencies and ${pairChangesCount} pair routing${pairChangesCount !== 1 ? 's' : ''}. Logged to audit trail.`,
+      title: 'Currency Selection Saved',
+      description: `${selectedCurrencies.length} currencies configured. Logged to audit trail.`,
+    });
+  };
+
+  const handleSavePairMatrix = () => {
+    updateConfig(selectedCurrencies, stagedPairConfigurations, hiddenCurrencies);
+    
+    const pairChangesCount = modifiedPairs.size;
+    const directCount = Array.from(modifiedPairs).filter(
+      pair => stagedPairConfigurations[pair] === 'direct'
+    ).length;
+    const exoticCount = pairChangesCount - directCount;
+    
+    toast({
+      title: 'Pair Routing Saved',
+      description: `${pairChangesCount} pair${pairChangesCount !== 1 ? 's' : ''} updated${directCount > 0 ? ` (${directCount} direct` : ''}${exoticCount > 0 ? `${directCount > 0 ? ', ' : ' ('}${exoticCount} exotic)` : directCount > 0 ? ')' : ''}. Logged to audit trail.`,
     });
   };
 
@@ -226,17 +241,6 @@ const DirectTradingConfig = () => {
         </Alert>
       )}
 
-      {hasUnsavedChanges && (
-        <Alert className="border-primary/50 bg-primary/5">
-          <AlertCircle className="h-4 w-4 text-primary" />
-          <AlertDescription className="flex items-center justify-between">
-            <span className="text-primary">
-              <strong>{modifiedPairs.size} pair{modifiedPairs.size !== 1 ? 's' : ''}</strong> modified. 
-              Click Save to apply or Cancel to discard.
-            </span>
-          </AlertDescription>
-        </Alert>
-      )}
 
       <Card>
         <CardHeader>
@@ -301,12 +305,12 @@ const DirectTradingConfig = () => {
               {new Date(config.lastModifiedAt).toLocaleString()}
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={handleCancel} disabled={!hasUnsavedChanges}>
+              <Button variant="outline" onClick={handleCancel} disabled={!hasCurrencyChanges && !hasPairChanges}>
                 Cancel
               </Button>
-              <Button onClick={handleSave} disabled={!hasUnsavedChanges}>
+              <Button onClick={handleSaveCurrencies} disabled={!hasCurrencyChanges}>
                 <Save className="h-4 w-4 mr-2" />
-                Save Configuration
+                Save Currency Selection
               </Button>
             </div>
           </div>
@@ -320,14 +324,31 @@ const DirectTradingConfig = () => {
             Click any cell to toggle between Direct and Exotic routing for that pair
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {hasPairChanges && (
+            <Alert className="border-primary/50 bg-primary/5">
+              <AlertCircle className="h-4 w-4 text-primary" />
+              <AlertDescription>
+                <span className="text-primary">
+                  <strong>{modifiedPairs.size} pair{modifiedPairs.size !== 1 ? 's' : ''}</strong> modified in matrix. 
+                  Save changes below to apply.
+                </span>
+              </AlertDescription>
+            </Alert>
+          )}
           <CurrencyPairMatrix 
             currencies={selectedCurrencies} 
             pairConfigurations={stagedPairConfigurations}
             modifiedPairs={modifiedPairs}
             onPairToggle={handlePairToggle}
-            highlightChanges={hasUnsavedChanges} 
+            highlightChanges={hasPairChanges} 
           />
+          <div className="flex justify-end gap-2 pt-4 border-t border-border">
+            <Button onClick={handleSavePairMatrix} disabled={!hasPairChanges}>
+              <Save className="h-4 w-4 mr-2" />
+              Save Changes
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

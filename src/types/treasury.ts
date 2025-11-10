@@ -21,14 +21,17 @@ export interface Trade {
   isExoticPair?: boolean; // true if neither currency in the pair is USD
   decompositionReason?: string; // explanation for USD routing
   netUsdExposure?: number; // intermediate USD amount created/consumed
+  parentTradeId?: string; // Reference to parent exotic trade if this is a USD leg entry
 }
 
 export interface UsdLeg {
-  pair: string; // e.g., "USDMYR" or "USDHKD"
-  amount: number;
-  rate: number;
-  usdEquivalent: number;
-  legType?: 'Buy Leg' | 'Sell Leg'; // clarifies direction for exotic pair decomposition
+  pair: string; // e.g., "USD/MYR" or "USD/HKD"
+  buy_amount: number; // Amount being bought (always positive) in local currency
+  sell_amount: number; // Amount being sold (always positive) in local currency
+  usd_position: number; // Net USD position (positive = long USD, negative = short USD)
+  local_position: number; // Net local currency position (with sign)
+  rate: number; // Trade execution rate (USD/XXX format)
+  legType: 'Buy Leg' | 'Sell Leg'; // Clarifies USD direction (Buy Leg = buying USD, Sell Leg = selling USD)
 }
 
 export interface Hedge {

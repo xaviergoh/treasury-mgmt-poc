@@ -387,15 +387,15 @@ export default function CurrencyOverview() {
                               </TableHeader>
                               <TableBody>
                                 {trade.usdLegs.map((leg, idx) => {
-                                  const [base, quote] = leg.pair.replace('USD', 'USD/').includes('/') 
+                                  const [base, quote] = leg.pair.includes('/') 
                                     ? leg.pair.split('/')
                                     : leg.pair.startsWith('USD')
                                     ? ['USD', leg.pair.substring(3)]
                                     : [leg.pair.substring(0, 3), 'USD'];
                                   
-                                  const basePosition = leg.amount;
+                                  const basePosition = leg.local_position;
                                   // Calculate actual quote currency position
-                                  const quotePosition = -(leg.amount * leg.rate);
+                                  const quotePosition = -(leg.local_position * leg.rate);
                                   
                                   const baseLabel = basePosition > 0 
                                     ? `+${formatCurrency(basePosition)}`

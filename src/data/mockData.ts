@@ -175,7 +175,7 @@ export const mockPositions: Position[] = [
         originalAmount: 1500000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'USDSGD', amount: 1500000, rate: 1.3400, usdEquivalent: 1500000, legType: 'Buy Leg' }
+          { pair: 'USD/SGD', buy_amount: 1500000, sell_amount: 0, usd_position: 1500000, local_position: 1500000, rate: 1.3400, legType: 'Buy Leg' }
         ]
       },
       // EUR/SGD - Direct pair (G10xG10)
@@ -187,7 +187,7 @@ export const mockPositions: Position[] = [
         originalAmount: 1000000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'EURSGD', amount: 1000000, rate: 1.4580, usdEquivalent: 1456200 }
+          { pair: 'EUR/SGD', buy_amount: 1000000, sell_amount: 0, usd_position: 0, local_position: 1000000, rate: 1.4580, legType: 'Buy Leg' }
         ]
       },
       // JPY/SGD - Direct pair (G10xG10)
@@ -199,7 +199,7 @@ export const mockPositions: Position[] = [
         originalAmount: 15000000, // 15M JPY
         isExoticPair: false,
         usdLegs: [
-          { pair: 'JPYSGD', amount: 15000000, rate: 0.00900, usdEquivalent: 135000 }
+          { pair: 'JPY/SGD', buy_amount: 15000000, sell_amount: 0, usd_position: 0, local_position: 15000000, rate: 0.00900, legType: 'Buy Leg' }
         ]
       },
       // AUD/SGD - Direct pair (G10xG10)
@@ -211,7 +211,7 @@ export const mockPositions: Position[] = [
         originalAmount: 500000, // 500K AUD
         isExoticPair: false,
         usdLegs: [
-          { pair: 'AUDSGD', amount: 500000, rate: 0.8832, usdEquivalent: 441600 }
+          { pair: 'AUD/SGD', buy_amount: 500000, sell_amount: 0, usd_position: 0, local_position: 500000, rate: 0.8832, legType: 'Buy Leg' }
         ]
       },
       // GBP/SGD - Direct pair (G10xG10)
@@ -223,7 +223,7 @@ export const mockPositions: Position[] = [
         originalAmount: 300000, // Buying 300K GBP (from SGD perspective, selling SGD)
         isExoticPair: false,
         usdLegs: [
-          { pair: 'GBPSGD', amount: 300000, rate: 1.7082, usdEquivalent: 512460 }
+          { pair: 'GBP/SGD', buy_amount: 300000, sell_amount: 0, usd_position: 0, local_position: 300000, rate: 1.7082, legType: 'Buy Leg' }
         ]
       },
       // CAD/SGD - Direct pair (G10xG10)
@@ -235,7 +235,7 @@ export const mockPositions: Position[] = [
         originalAmount: -800000, // Selling CAD (from SGD perspective, buying SGD)
         isExoticPair: false,
         usdLegs: [
-          { pair: 'CADSGD', amount: -800000, rate: 0.9880, usdEquivalent: -790400 }
+          { pair: 'CAD/SGD', buy_amount: 0, sell_amount: 800000, usd_position: 0, local_position: -800000, rate: 0.9880, legType: 'Sell Leg' }
         ]
       },
       // CHF/SGD - Direct pair (G10xG10)
@@ -247,7 +247,7 @@ export const mockPositions: Position[] = [
         originalAmount: 250000, // Buying CHF (from SGD perspective, selling SGD)
         isExoticPair: false,
         usdLegs: [
-          { pair: 'CHFSGD', amount: 250000, rate: 1.5380, usdEquivalent: 384500 }
+          { pair: 'CHF/SGD', buy_amount: 250000, sell_amount: 0, usd_position: 0, local_position: 250000, rate: 1.5380, legType: 'Buy Leg' }
         ]
       },
       // NZD/SGD - Direct pair (G10xG10)
@@ -259,7 +259,7 @@ export const mockPositions: Position[] = [
         originalAmount: -400000, // Selling NZD (from SGD perspective, buying SGD)
         isExoticPair: false,
         usdLegs: [
-          { pair: 'NZDSGD', amount: -400000, rate: 0.8020, usdEquivalent: -320800 }
+          { pair: 'NZD/SGD', buy_amount: 0, sell_amount: 400000, usd_position: 0, local_position: -400000, rate: 0.8020, legType: 'Sell Leg' }
         ]
       },
       // CNH/SGD - Exotic pair (non-G10 requires USD routing)
@@ -268,13 +268,13 @@ export const mockPositions: Position[] = [
         tradeDate: new Date(Date.now() - 518400000).toISOString(),
         customerOrder: 'CUST-073',
         originalPair: 'CNH/SGD',
-        originalAmount: 3000000, // 3M CNH
+        originalAmount: 554866, // Buying 554,866 SGD
         isExoticPair: true,
-        decompositionReason: 'Exotic pair - USD routing required',
-        netUsdExposure: 414079,
+        decompositionReason: 'Exotic pair - USD routing required. Sell CNH, buy SGD via USD',
+        netUsdExposure: 0, // Net USD exposure is near zero after both legs
         usdLegs: [
-          { pair: 'USDCNH', amount: -3000000, rate: 7.2450, usdEquivalent: 414079, legType: 'Sell Leg' },
-          { pair: 'USDSGD', amount: 414079, rate: 1.3400, usdEquivalent: 414079, legType: 'Buy Leg' }
+          { pair: 'USD/CNH', buy_amount: 0, sell_amount: 3000000, usd_position: 414079, local_position: -3000000, rate: 7.2450, legType: 'Buy Leg' },
+          { pair: 'USD/SGD', buy_amount: 554866, sell_amount: 0, usd_position: -414079, local_position: 554866, rate: 1.3400, legType: 'Sell Leg' }
         ]
       }
     ]
@@ -297,7 +297,7 @@ export const mockPositions: Position[] = [
         originalPair: 'EUR/USD',
         originalAmount: -1800000,
         usdLegs: [
-          { pair: 'EURUSD', amount: -1800000, rate: 1.0920, usdEquivalent: -1965600 }
+          { pair: 'EUR/USD', buy_amount: 0, sell_amount: 1800000, usd_position: -1965600, local_position: -1800000, rate: 1.0920, legType: 'Sell Leg' }
         ]
       },
       // EUR/SGD cross-currency trade (also in SGD position)
@@ -309,7 +309,7 @@ export const mockPositions: Position[] = [
         originalAmount: 1000000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'EURSGD', amount: 1000000, rate: 1.4580, usdEquivalent: 1456200 }
+          { pair: 'EUR/SGD', buy_amount: 1000000, sell_amount: 0, usd_position: 0, local_position: 1000000, rate: 1.4580, legType: 'Buy Leg' }
         ]
       },
       {
@@ -320,7 +320,7 @@ export const mockPositions: Position[] = [
         originalAmount: 800000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'EURGBP', amount: 800000, rate: 0.8520, usdEquivalent: 681600 }
+          { pair: 'EUR/GBP', buy_amount: 800000, sell_amount: 0, usd_position: 0, local_position: 800000, rate: 0.8520, legType: 'Buy Leg' }
         ]
       },
       {
@@ -331,7 +331,7 @@ export const mockPositions: Position[] = [
         originalAmount: -500000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'EURJPY', amount: -500000, rate: 161.80, usdEquivalent: -80900000 }
+          { pair: 'EUR/JPY', buy_amount: 0, sell_amount: 500000, usd_position: 0, local_position: -500000, rate: 161.80, legType: 'Sell Leg' }
         ]
       }
     ]
@@ -354,7 +354,7 @@ export const mockPositions: Position[] = [
         originalPair: 'GBP/USD',
         originalAmount: 1200000,
         usdLegs: [
-          { pair: 'GBPUSD', amount: 1200000, rate: 1.2650, usdEquivalent: 1518000 }
+          { pair: 'GBP/USD', buy_amount: 1200000, sell_amount: 0, usd_position: 1518000, local_position: 1200000, rate: 1.2650, legType: 'Buy Leg' }
         ]
       },
       // GBP/SGD cross-currency trade (also in SGD position)
@@ -366,7 +366,7 @@ export const mockPositions: Position[] = [
         originalAmount: -300000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'GBPSGD', amount: -300000, rate: 1.7082, usdEquivalent: -512460 }
+          { pair: 'GBP/SGD', buy_amount: 0, sell_amount: 300000, usd_position: 0, local_position: -300000, rate: 1.7082, legType: 'Sell Leg' }
         ]
       },
       // EUR/GBP cross-currency trade (also in EUR position)
@@ -378,7 +378,7 @@ export const mockPositions: Position[] = [
         originalAmount: -800000, // Selling 800K EUR, buying GBP
         isExoticPair: false,
         usdLegs: [
-          { pair: 'EURGBP', amount: -800000, rate: 0.8520, usdEquivalent: -681600 }
+          { pair: 'EUR/GBP', buy_amount: 0, sell_amount: 800000, usd_position: 0, local_position: -800000, rate: 0.8520, legType: 'Sell Leg' }
         ]
       },
       {
@@ -389,7 +389,7 @@ export const mockPositions: Position[] = [
         originalAmount: 600000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'GBPJPY', amount: 600000, rate: 189.50, usdEquivalent: 113700000 }
+          { pair: 'GBP/JPY', buy_amount: 600000, sell_amount: 0, usd_position: 0, local_position: 600000, rate: 189.50, legType: 'Buy Leg' }
         ]
       }
     ]
@@ -413,7 +413,7 @@ export const mockPositions: Position[] = [
         originalAmount: -950000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'AUDUSD', amount: -950000, rate: 0.6620, usdEquivalent: -628900, legType: 'Sell Leg' }
+          { pair: 'AUD/USD', buy_amount: 0, sell_amount: 950000, usd_position: -628900, local_position: -950000, rate: 0.6620, legType: 'Sell Leg' }
         ]
       },
       // Corresponding AUD/SGD trade - Direct pair (G10xG10)
@@ -425,7 +425,7 @@ export const mockPositions: Position[] = [
         originalAmount: 500000, // Selling 500K AUD
         isExoticPair: false,
         usdLegs: [
-          { pair: 'AUDSGD', amount: 500000, rate: 0.8832, usdEquivalent: 441600 }
+          { pair: 'AUD/SGD', buy_amount: 500000, sell_amount: 0, usd_position: 0, local_position: 500000, rate: 0.8832, legType: 'Buy Leg' }
         ]
       }
     ]
@@ -449,7 +449,7 @@ export const mockPositions: Position[] = [
         originalAmount: 3200000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'USDJPY', amount: 3200000, rate: 148.80, usdEquivalent: 21505, legType: 'Buy Leg' }
+          { pair: 'USD/JPY', buy_amount: 3200000, sell_amount: 0, usd_position: 21505, local_position: 3200000, rate: 148.80, legType: 'Buy Leg' }
         ]
       },
       // JPY/SGD cross-currency trade (also in SGD position)
@@ -461,7 +461,7 @@ export const mockPositions: Position[] = [
         originalAmount: -15000000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'JPYSGD', amount: -15000000, rate: 0.00900, usdEquivalent: -135000 }
+          { pair: 'JPY/SGD', buy_amount: 0, sell_amount: 15000000, usd_position: 0, local_position: -15000000, rate: 0.00900, legType: 'Sell Leg' }
         ]
       },
       // EUR/JPY cross-currency trade (also in EUR position)
@@ -473,7 +473,7 @@ export const mockPositions: Position[] = [
         originalAmount: 80900000, // Buying JPY
         isExoticPair: false,
         usdLegs: [
-          { pair: 'EURJPY', amount: 80900000, rate: 161.80, usdEquivalent: 500000 }
+          { pair: 'EUR/JPY', buy_amount: 80900000, sell_amount: 0, usd_position: 0, local_position: 80900000, rate: 161.80, legType: 'Buy Leg' }
         ]
       },
       // GBP/JPY cross-currency trade (also in GBP position)
@@ -485,7 +485,7 @@ export const mockPositions: Position[] = [
         originalAmount: -113700000, // Selling JPY
         isExoticPair: false,
         usdLegs: [
-          { pair: 'GBPJPY', amount: -113700000, rate: 189.50, usdEquivalent: -600000 }
+          { pair: 'GBP/JPY', buy_amount: 0, sell_amount: 113700000, usd_position: 0, local_position: -113700000, rate: 189.50, legType: 'Sell Leg' }
         ]
       },
       {
@@ -496,7 +496,7 @@ export const mockPositions: Position[] = [
         originalAmount: 52500000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'USDJPY', amount: 52500000, rate: 148.50, usdEquivalent: 353535 }
+          { pair: 'USD/JPY', buy_amount: 52500000, sell_amount: 0, usd_position: 353535, local_position: 52500000, rate: 148.50, legType: 'Buy Leg' }
         ]
       }
     ]
@@ -517,13 +517,13 @@ export const mockPositions: Position[] = [
         tradeDate: new Date(Date.now() - 604800000).toISOString(),
         customerOrder: 'CUST-042',
         originalPair: 'MYR/HKD',
-        originalAmount: 4500000,
+        originalAmount: 4500000, // Buying 4.5M MYR
         isExoticPair: true,
-        decompositionReason: 'Exotic pair - USD routing required',
-        netUsdExposure: 1011236,
+        decompositionReason: 'Exotic pair - USD routing required. Buy MYR, sell HKD via USD',
+        netUsdExposure: 0, // Net USD exposure is near zero after both legs
         usdLegs: [
-          { pair: 'USDMYR', amount: 4500000, rate: 4.4500, usdEquivalent: 1011236, legType: 'Buy Leg' },
-          { pair: 'USDHKD', amount: -1011236, rate: 7.8200, usdEquivalent: -1011236, legType: 'Sell Leg' }
+          { pair: 'USD/MYR', buy_amount: 4500000, sell_amount: 0, usd_position: -1011236, local_position: 4500000, rate: 4.4500, legType: 'Sell Leg' },
+          { pair: 'USD/HKD', buy_amount: 0, sell_amount: 7910026, usd_position: 1011236, local_position: -7910026, rate: 7.8200, legType: 'Buy Leg' }
         ]
       },
       {
@@ -534,7 +534,7 @@ export const mockPositions: Position[] = [
         originalAmount: 2500000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'USDMYR', amount: 2500000, rate: 4.4400, usdEquivalent: 562838 }
+          { pair: 'USD/MYR', buy_amount: 2500000, sell_amount: 0, usd_position: 562838, local_position: 2500000, rate: 4.4400, legType: 'Buy Leg' }
         ]
       },
       {
@@ -542,13 +542,13 @@ export const mockPositions: Position[] = [
         tradeDate: new Date(Date.now() - 1123200000).toISOString(),
         customerOrder: 'CUST-134',
         originalPair: 'MYR/HKD',
-        originalAmount: 2200000,
+        originalAmount: 2200000, // Buying 2.2M MYR
         isExoticPair: true,
-        decompositionReason: 'Exotic pair - USD routing required',
-        netUsdExposure: 494382,
+        decompositionReason: 'Exotic pair - USD routing required. Buy MYR, sell HKD via USD',
+        netUsdExposure: 0, // Net USD exposure is near zero after both legs
         usdLegs: [
-          { pair: 'USDMYR', amount: 2200000, rate: 4.4500, usdEquivalent: 494382, legType: 'Buy Leg' },
-          { pair: 'USDHKD', amount: -494382, rate: 7.8200, usdEquivalent: -494382, legType: 'Sell Leg' }
+          { pair: 'USD/MYR', buy_amount: 2200000, sell_amount: 0, usd_position: -494382, local_position: 2200000, rate: 4.4500, legType: 'Sell Leg' },
+          { pair: 'USD/HKD', buy_amount: 0, sell_amount: 3866467, usd_position: 494382, local_position: -3866467, rate: 7.8200, legType: 'Buy Leg' }
         ]
       }
     ]
@@ -569,13 +569,13 @@ export const mockPositions: Position[] = [
         tradeDate: new Date(Date.now() - 518400000).toISOString(),
         customerOrder: 'CUST-073',
         originalPair: 'CNH/SGD',
-        originalAmount: -3000000,
+        originalAmount: -3000000, // Selling 3M CNH
         isExoticPair: true,
-        decompositionReason: 'Exotic pair - USD routing required',
-        netUsdExposure: -414079,
+        decompositionReason: 'Exotic pair - USD routing required. Sell CNH, buy SGD via USD',
+        netUsdExposure: 0, // Net USD exposure is near zero after both legs
         usdLegs: [
-          { pair: 'USDCNH', amount: -3000000, rate: 7.2450, usdEquivalent: -414079, legType: 'Sell Leg' },
-          { pair: 'USDSGD', amount: 414079, rate: 1.3400, usdEquivalent: 414079, legType: 'Buy Leg' }
+          { pair: 'USD/CNH', buy_amount: 0, sell_amount: 3000000, usd_position: 414079, local_position: -3000000, rate: 7.2450, legType: 'Buy Leg' },
+          { pair: 'USD/SGD', buy_amount: 554866, sell_amount: 0, usd_position: -414079, local_position: 554866, rate: 1.3400, legType: 'Sell Leg' }
         ]
       },
       {
@@ -586,7 +586,7 @@ export const mockPositions: Position[] = [
         originalAmount: -2200000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'USDCNH', amount: -2200000, rate: 7.2200, usdEquivalent: -304709 }
+          { pair: 'USD/CNH', buy_amount: 0, sell_amount: 2200000, usd_position: -304709, local_position: -2200000, rate: 7.2200, legType: 'Sell Leg' }
         ]
       }
     ]
@@ -610,7 +610,7 @@ export const mockPositions: Position[] = [
         originalAmount: 1500000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'USDCAD', amount: 1500000, rate: 1.3550, usdEquivalent: 1106940 }
+          { pair: 'USD/CAD', buy_amount: 1500000, sell_amount: 0, usd_position: 1106940, local_position: 1500000, rate: 1.3550, legType: 'Buy Leg' }
         ]
       },
       {
@@ -621,7 +621,7 @@ export const mockPositions: Position[] = [
         originalAmount: 800000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'CADSGD', amount: 800000, rate: 0.9880, usdEquivalent: 790400 }
+          { pair: 'CAD/SGD', buy_amount: 800000, sell_amount: 0, usd_position: 0, local_position: 800000, rate: 0.9880, legType: 'Buy Leg' }
         ]
       },
       {
@@ -632,7 +632,7 @@ export const mockPositions: Position[] = [
         originalAmount: -200000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'USDCAD', amount: -200000, rate: 1.3600, usdEquivalent: -147059 }
+          { pair: 'USD/CAD', buy_amount: 0, sell_amount: 200000, usd_position: -147059, local_position: -200000, rate: 1.3600, legType: 'Sell Leg' }
         ]
       }
     ]
@@ -656,7 +656,7 @@ export const mockPositions: Position[] = [
         originalAmount: -600000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'USDCHF', amount: -600000, rate: 0.8750, usdEquivalent: -685714 }
+          { pair: 'USD/CHF', buy_amount: 0, sell_amount: 600000, usd_position: -685714, local_position: -600000, rate: 0.8750, legType: 'Sell Leg' }
         ]
       },
       {
@@ -667,7 +667,7 @@ export const mockPositions: Position[] = [
         originalAmount: -250000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'CHFSGD', amount: -250000, rate: 1.5380, usdEquivalent: -384500 }
+          { pair: 'CHF/SGD', buy_amount: 0, sell_amount: 250000, usd_position: 0, local_position: -250000, rate: 1.5380, legType: 'Sell Leg' }
         ]
       }
     ]
@@ -691,7 +691,7 @@ export const mockPositions: Position[] = [
         originalAmount: 1200000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'NZDUSD', amount: 1200000, rate: 0.5950, usdEquivalent: 714000 }
+          { pair: 'NZD/USD', buy_amount: 1200000, sell_amount: 0, usd_position: 714000, local_position: 1200000, rate: 0.5950, legType: 'Buy Leg' }
         ]
       },
       {
@@ -702,7 +702,7 @@ export const mockPositions: Position[] = [
         originalAmount: 400000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'NZDSGD', amount: 400000, rate: 0.8020, usdEquivalent: 320800 }
+          { pair: 'NZD/SGD', buy_amount: 400000, sell_amount: 0, usd_position: 0, local_position: 400000, rate: 0.8020, legType: 'Buy Leg' }
         ]
       },
       {
@@ -713,7 +713,7 @@ export const mockPositions: Position[] = [
         originalAmount: -620000,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'NZDUSD', amount: -620000, rate: 0.6000, usdEquivalent: -372000 }
+          { pair: 'NZD/USD', buy_amount: 0, sell_amount: 620000, usd_position: -372000, local_position: -620000, rate: 0.6000, legType: 'Sell Leg' }
         ]
       }
     ]
@@ -734,13 +734,13 @@ export const mockPositions: Position[] = [
         tradeDate: new Date(Date.now() - 604800000).toISOString(),
         customerOrder: 'CUST-042',
         originalPair: 'MYR/HKD',
-        originalAmount: -7910026, // Selling HKD
+        originalAmount: -7910026, // Selling 7.91M HKD
         isExoticPair: true,
-        decompositionReason: 'Exotic pair - USD routing required',
-        netUsdExposure: -1011236,
+        decompositionReason: 'Exotic pair - USD routing required. Buy MYR, sell HKD via USD',
+        netUsdExposure: 0, // Net USD exposure is near zero after both legs
         usdLegs: [
-          { pair: 'USDMYR', amount: 4500000, rate: 4.4500, usdEquivalent: 1011236, legType: 'Buy Leg' },
-          { pair: 'USDHKD', amount: -7910026, rate: 7.8200, usdEquivalent: -1011236, legType: 'Sell Leg' }
+          { pair: 'USD/MYR', buy_amount: 4500000, sell_amount: 0, usd_position: -1011236, local_position: 4500000, rate: 4.4500, legType: 'Sell Leg' },
+          { pair: 'USD/HKD', buy_amount: 0, sell_amount: 7910026, usd_position: 1011236, local_position: -7910026, rate: 7.8200, legType: 'Buy Leg' }
         ]
       },
       {
@@ -748,13 +748,13 @@ export const mockPositions: Position[] = [
         tradeDate: new Date(Date.now() - 1123200000).toISOString(),
         customerOrder: 'CUST-134',
         originalPair: 'MYR/HKD',
-        originalAmount: -3866467, // Selling HKD
+        originalAmount: -3866467, // Selling 3.87M HKD
         isExoticPair: true,
-        decompositionReason: 'Exotic pair - USD routing required',
-        netUsdExposure: -494382,
+        decompositionReason: 'Exotic pair - USD routing required. Buy MYR, sell HKD via USD',
+        netUsdExposure: 0, // Net USD exposure is near zero after both legs
         usdLegs: [
-          { pair: 'USDMYR', amount: 2200000, rate: 4.4500, usdEquivalent: 494382, legType: 'Buy Leg' },
-          { pair: 'USDHKD', amount: -3866467, rate: 7.8200, usdEquivalent: -494382, legType: 'Sell Leg' }
+          { pair: 'USD/MYR', buy_amount: 2200000, sell_amount: 0, usd_position: -494382, local_position: 2200000, rate: 4.4500, legType: 'Sell Leg' },
+          { pair: 'USD/HKD', buy_amount: 0, sell_amount: 3866467, usd_position: 494382, local_position: -3866467, rate: 7.8200, legType: 'Buy Leg' }
         ]
       },
       {
@@ -765,7 +765,105 @@ export const mockPositions: Position[] = [
         originalAmount: -723507,
         isExoticPair: false,
         usdLegs: [
-          { pair: 'USDHKD', amount: -723507, rate: 7.8100, usdEquivalent: -92649 }
+          { pair: 'USD/HKD', buy_amount: 0, sell_amount: 723507, usd_position: 92649, local_position: -723507, rate: 7.8100, legType: 'Buy Leg' }
+        ]
+      }
+    ]
+  },
+  // USD Position - Aggregates all exotic trade USD legs
+  {
+    id: 'POS-USD',
+    currency: 'USD',
+    liquidityProvider: 'Multiple',
+    netPosition: 0, // Sum of all USD legs: should be near zero for balanced exotic trades
+    currentRate: 1.0000,
+    mtmValue: 0,
+    unrealizedPnL: 0,
+    realizedPnL: 0,
+    status: 'Open',
+    trades: [
+      // USD/MYR leg from TRD-0007
+      {
+        id: 'TRD-0007-USDMYR',
+        tradeDate: new Date(Date.now() - 604800000).toISOString(),
+        customerOrder: 'CUST-042',
+        originalPair: 'USD/MYR',
+        originalAmount: -1011236, // Short USD (selling USD to buy MYR)
+        isExoticPair: false,
+        decompositionReason: 'USD leg from exotic trade MYR/HKD (TRD-0007). Buying 4.5M MYR requires selling USD.',
+        parentTradeId: 'TRD-0007',
+        usdLegs: [
+          { pair: 'USD/MYR', buy_amount: 4500000, sell_amount: 0, usd_position: -1011236, local_position: 4500000, rate: 4.4500, legType: 'Sell Leg' }
+        ]
+      },
+      // USD/HKD leg from TRD-0007
+      {
+        id: 'TRD-0007-USDHKD',
+        tradeDate: new Date(Date.now() - 604800000).toISOString(),
+        customerOrder: 'CUST-042',
+        originalPair: 'USD/HKD',
+        originalAmount: 1011236, // Long USD (buying USD by selling HKD)
+        isExoticPair: false,
+        decompositionReason: 'USD leg from exotic trade MYR/HKD (TRD-0007). Selling 7.91M HKD generates USD.',
+        parentTradeId: 'TRD-0007',
+        usdLegs: [
+          { pair: 'USD/HKD', buy_amount: 0, sell_amount: 7910026, usd_position: 1011236, local_position: -7910026, rate: 7.8200, legType: 'Buy Leg' }
+        ]
+      },
+      // USD/CNH leg from TRD-0011
+      {
+        id: 'TRD-0011-USDCNH',
+        tradeDate: new Date(Date.now() - 518400000).toISOString(),
+        customerOrder: 'CUST-073',
+        originalPair: 'USD/CNH',
+        originalAmount: 414079, // Long USD (buying USD by selling CNH)
+        isExoticPair: false,
+        decompositionReason: 'USD leg from exotic trade CNH/SGD (TRD-0011). Selling 3M CNH generates USD.',
+        parentTradeId: 'TRD-0011',
+        usdLegs: [
+          { pair: 'USD/CNH', buy_amount: 0, sell_amount: 3000000, usd_position: 414079, local_position: -3000000, rate: 7.2450, legType: 'Buy Leg' }
+        ]
+      },
+      // USD/SGD leg from TRD-0011
+      {
+        id: 'TRD-0011-USDSGD',
+        tradeDate: new Date(Date.now() - 518400000).toISOString(),
+        customerOrder: 'CUST-073',
+        originalPair: 'USD/SGD',
+        originalAmount: -414079, // Short USD (selling USD to buy SGD)
+        isExoticPair: false,
+        decompositionReason: 'USD leg from exotic trade CNH/SGD (TRD-0011). Buying 554,866 SGD requires selling USD.',
+        parentTradeId: 'TRD-0011',
+        usdLegs: [
+          { pair: 'USD/SGD', buy_amount: 554866, sell_amount: 0, usd_position: -414079, local_position: 554866, rate: 1.3400, legType: 'Sell Leg' }
+        ]
+      },
+      // USD/MYR leg from TRD-0017
+      {
+        id: 'TRD-0017-USDMYR',
+        tradeDate: new Date(Date.now() - 1123200000).toISOString(),
+        customerOrder: 'CUST-134',
+        originalPair: 'USD/MYR',
+        originalAmount: -494382, // Short USD (selling USD to buy MYR)
+        isExoticPair: false,
+        decompositionReason: 'USD leg from exotic trade MYR/HKD (TRD-0017). Buying 2.2M MYR requires selling USD.',
+        parentTradeId: 'TRD-0017',
+        usdLegs: [
+          { pair: 'USD/MYR', buy_amount: 2200000, sell_amount: 0, usd_position: -494382, local_position: 2200000, rate: 4.4500, legType: 'Sell Leg' }
+        ]
+      },
+      // USD/HKD leg from TRD-0017
+      {
+        id: 'TRD-0017-USDHKD',
+        tradeDate: new Date(Date.now() - 1123200000).toISOString(),
+        customerOrder: 'CUST-134',
+        originalPair: 'USD/HKD',
+        originalAmount: 494382, // Long USD (buying USD by selling HKD)
+        isExoticPair: false,
+        decompositionReason: 'USD leg from exotic trade MYR/HKD (TRD-0017). Selling 3.87M HKD generates USD.',
+        parentTradeId: 'TRD-0017',
+        usdLegs: [
+          { pair: 'USD/HKD', buy_amount: 0, sell_amount: 3866467, usd_position: 494382, local_position: -3866467, rate: 7.8200, legType: 'Buy Leg' }
         ]
       }
     ]
